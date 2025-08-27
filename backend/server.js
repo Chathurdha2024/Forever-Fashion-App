@@ -5,6 +5,7 @@ import connectDB from './config/mongodb.js'
 import connectCloudinary from './config/cloudinary.js'
 import userRouter from './routes/userRoute.js'
 import productRouter from './routes/productRoute.js'
+import cartRouter from './routes/cartRoute.js'
 
 // App Config
 const app = express()
@@ -19,7 +20,8 @@ app.use(cors())
 // api endpoints
 app.use('/api/user',userRouter) /*2) added this router in server.js file -----if we want to check the API, we should type /api/user/register
                                                                                                                           /api/user/login  in Thunder Client*/
-app.use('/api/product',productRouter)                                                                                                                          
+app.use('/api/product',productRouter) 
+app.use('/api/cart',cartRouter)                                                                                                                         
 
 app.get('/',(req,res)=>{
     res.send("API Working")  //When we open local host port 4000(it means web), it should display "API Working"
