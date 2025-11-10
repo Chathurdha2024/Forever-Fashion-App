@@ -6,48 +6,53 @@ import { backendUrl, currency } from '../App'
 import {toast} from 'react-toastify'
 import { assets } from "../assets/assets";
 
-const Orders = ({token}) => {
+const Orders = () => {
 
   const [orders,setOrders] = useState([])
-
+  const token = localStorage.getItem("token");
+  
   const fetchAllOrders = async () => {
-    
-    if (!token) {
-      return null;
+  if (!token) return;
+
+  try {
+    const response = await axios.post(
+      "http://localhost:4000/api/order/list",
+      {},
+      { headers: { token } }
+    );
+    if (response.data.success) {
+      setOrders(response.data.orders);
+    } else {
+      toast.error(response.data.message);
     }
-
-    try {
-      
-       const response = await axios.post("http://localhost:4000/api/order/list",{},{headers:{token}})
-       if (response.data.success) {
-        setOrders(response.data.orders)
-       } else {
-        toast.error(response.data.message)
-       }
-       
-
-
-    } catch (error) {
-      toast.error(error.message)
-    }
+  } catch (error) {
+    toast.error(error.response?.data?.message || error.message);
   }
+};
 
-  const statusHandler = async ( event, orderId ) => {
-    try {
-      const response = await axios.post("http://localhost:4000/api/order/status" , {orderId, status:event.target.value}, { headers: {token}})
-      if (response.data.success) {
-        await fetchAllOrders()
-      }
-    } catch (error) {
-      console.log(error)
-      toast.error(response.data.message)
-      
+const statusHandler = async (event, orderId) => {
+  try {
+    const response = await axios.post(
+      "http://localhost:4000/api/order/status",
+      { orderId, status: event.target.value },
+      { headers: { token } }
+    );
+    if (response.data.success) {
+      await fetchAllOrders(); // refresh after status update
     }
+  } catch (error) {
+    console.log(error);
+    toast.error(error.response?.data?.message || error.message);
   }
+};
 
-  useEffect(()=>{
-    fetchAllOrders();
-  },[token])
+  useEffect(() => {
+  if (!token) return;
+  fetchAllOrders();
+  const interval = setInterval(fetchAllOrders, 4000); // poll every 5s
+  return () => clearInterval(interval);
+}, [token]);
+
 
   return(
      <div>
