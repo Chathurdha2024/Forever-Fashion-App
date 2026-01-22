@@ -7,6 +7,15 @@ services:
     env_file:
       - ./backend/.env
     restart: unless-stopped
+    command: >
+      sh -c "
+      
+      echo '🚀 Backend   : http://localhost:4000' &&
+      echo '🖥 Frontend  : http://localhost:5173' &&
+      echo '🛠 Admin     : http://localhost:3002' &&
+      
+      node server.js
+      "
 
   frontend:
     build: ./frontend
