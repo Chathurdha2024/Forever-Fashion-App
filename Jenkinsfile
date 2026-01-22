@@ -15,59 +15,41 @@ pipeline {
             }
         }
 
-        stage('Build Frontend Docker Image') {
+        stage('Login to Docker Hub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        sh "echo $PASS | docker login -u $USER --password-stdin"
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Images') {
             steps {
                 script {
                     sh "docker build -t ${DOCKERHUB_USERNAME}/forever-fashion-app-frontend:latest ./frontend"
-                }
-            }
-        }
-
-        stage('Build Backend Docker Image') {
-            steps {
-                script {
                     sh "docker build -t ${DOCKERHUB_USERNAME}/forever-fashion-app-backend:latest ./backend"
-                }
-            }
-        }
-
-        stage('Build Admin Docker Image') {
-            steps {
-                script {
                     sh "docker build -t ${DOCKERHUB_USERNAME}/forever-fashion-app-admin:latest ./admin"
                 }
             }
         }
 
-        stage('Push Frontend Docker Image') {
+        stage('Push Docker Images') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                        sh "echo $PASS | docker login -u $USER --password-stdin"
-                        sh "docker push ${DOCKERHUB_USERNAME}/forever-fashion-app-frontend:latest"
-                    }
+                    sh "docker push ${DOCKERHUB_USERNAME}/forever-fashion-app-frontend:latest"
+                    sh "docker push ${DOCKERHUB_USERNAME}/forever-fashion-app-backend:latest"
+                    sh "docker push ${DOCKERHUB_USERNAME}/forever-fashion-app-admin:latest"
                 }
             }
         }
 
-        stage('Push Backend Docker Image') {
+        stage('Optional: Run Docker Compose') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                        sh "echo $PASS | docker login -u $USER --password-stdin"
-                        sh "docker push ${DOCKERHUB_USERNAME}/forever-fashion-app-backend:latest"
-                    }
-                }
-            }
-        }
-
-        stage('Push Admin Docker Image') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                        sh "echo $PASS | docker login -u $USER --password-stdin"
-                        sh "docker push ${DOCKERHUB_USERNAME}/forever-fashion-app-admin:latest"
-                    }
+                    // Only if your Jenkins agent can run Docker Compose
+                    sh "docker-compose up -d"
                 }
             }
         }
